@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>astralpirates.com</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
     body {
       margin: 0;
       background: black;
@@ -11,6 +12,7 @@
       color: white;
       font-family: 'Special Elite', monospace;
     }
+
     #title {
       position: absolute;
       top: 20px;
@@ -19,85 +21,103 @@
       font-size: 2em;
       z-index: 10;
     }
+
     #subtitle {
       position: absolute;
-      bottom: 20px;
+      bottom: 120px;
       width: 100%;
       text-align: center;
       font-size: 1em;
       z-index: 10;
     }
+
+    #qr-left, #qr-right {
+      position: absolute;
+      bottom: 20px;
+      width: 90px;
+      height: 90px;
+      z-index: 10;
+    }
+
+    #qr-left {
+      left: 20px;
+    }
+
+    #qr-right {
+      right: 20px;
+    }
   </style>
 </head>
 <body>
-<div id="title">astralpirates.com</div>
-<div id="subtitle">let's embark and save the world together</div>
+  <div id="title">astralpirates.com</div>
+  <div id="subtitle">grrrreat things are to come verrry soon</div>
+  <img src="donate.png" id="qr-left" alt="Donate QR">
+  <img src="enlist.png" id="qr-right" alt="Enlist QR">
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
-<script>
-  const scene = new THREE.Scene();
+  <!-- Three.js r149 for compatibility with script includes -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
 
-  // Galaxy skybox
-  const loaderCube = new THREE.CubeTextureLoader();
-  const textureCube = loaderCube.load([
-    'https://threejs.org/examples/textures/cube/space/px.jpg',
-    'https://threejs.org/examples/textures/cube/space/nx.jpg',
-    'https://threejs.org/examples/textures/cube/space/py.jpg',
-    'https://threejs.org/examples/textures/cube/space/ny.jpg',
-    'https://threejs.org/examples/textures/cube/space/pz.jpg',
-    'https://threejs.org/examples/textures/cube/space/nz.jpg',
-  ]);
-  scene.background = textureCube;
+  <script>
+    const scene = new THREE.Scene();
 
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.z = 6;
+    // Galaxy cube background (Milky Way texture set)
+    const loader = new THREE.CubeTextureLoader();
+    loader.setPath('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/MilkyWay/');
+    scene.background = loader.load([
+      'dark-s_px.jpg', 'dark-s_nx.jpg',
+      'dark-s_py.jpg', 'dark-s_ny.jpg',
+      'dark-s_pz.jpg', 'dark-s_nz.jpg'
+    ]);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+    const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+    camera.position.z = 6;
 
-  const light = new THREE.PointLight(0xffffff, 1);
-  light.position.set(10, 10, 10);
-  scene.add(light);
-  scene.add(new THREE.AmbientLight(0x404040));
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(innerWidth, innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-  // Gradient material for tetrahedron
-  const material = new THREE.ShaderMaterial({
-    uniforms: {
-      color1: { value: new THREE.Color(0x5500ff) }, // Violet/blue
-      color2: { value: new THREE.Color(0xff0066) }  // Red/pink
-    },
-    vertexShader: `
-      varying vec3 vPosition;
-      void main() {
-        vPosition = position;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 color1;
-      uniform vec3 color2;
-      varying vec3 vPosition;
-      void main() {
-        float pct = (vPosition.y + 2.0) / 4.0;
-        gl_FragColor = vec4(mix(color1, color2, pct), 1.0);
-      }
-    `,
-    side: THREE.DoubleSide
-  });
+    scene.add(new THREE.AmbientLight(0x404040));
+    const light = new THREE.PointLight(0xffffff, 1);
+    light.position.set(10, 10, 10);
+    scene.add(light);
 
-  const geometry = new THREE.TetrahedronGeometry(2);
-  const tetrahedron = new THREE.Mesh(geometry, material);
-  scene.add(tetrahedron);
+    // Gradient material for tetrahedron
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        color1: { value: new THREE.Color(0x5500ff) }, // Violet/blue
+        color2: { value: new THREE.Color(0xff0066) }  // Red/pink
+      },
+      vertexShader: `
+        varying vec3 vPosition;
+        void main() {
+          vPosition = position;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 color1;
+        uniform vec3 color2;
+        varying vec3 vPosition;
+        void main() {
+          float pct = (vPosition.y + 2.0) / 4.0;
+          gl_FragColor = vec4(mix(color1, color2, pct), 1.0);
+        }
+      `,
+      side: THREE.DoubleSide
+    });
 
-  function animate() {
-    requestAnimationFrame(animate);
-    tetrahedron.rotation.y += 0.01;
-    tetrahedron.rotation.x += 0.005;
-    renderer.render(scene, camera);
-  }
+    const geometry = new THREE.TetrahedronGeometry(2);
+    const tetrahedron = new THREE.Mesh(geometry, material);
+    scene.add(tetrahedron);
 
-  animate();
-</script>
+    function animate() {
+      requestAnimationFrame(animate);
+      tetrahedron.rotation.y += 0.01;
+      tetrahedron.rotation.x += 0.005;
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
 </body>
 </html>
