@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <title>astralpirates.com</title>
+  <link rel="icon" type="image/png" href="logo.png" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
+
     body {
       margin: 0;
       background: black;
       overflow: hidden;
-      color: white;
       font-family: 'Special Elite', monospace;
     }
 
@@ -20,6 +21,18 @@
       text-align: center;
       font-size: 2em;
       z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(to right, violet, blue, cyan, lime, yellow, orange, red, violet);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #title img {
+      height: 40px;
+      width: 40px;
     }
 
     #subtitle {
@@ -29,38 +42,64 @@
       text-align: center;
       font-size: 1em;
       z-index: 10;
+      background: linear-gradient(to right, violet, blue, cyan, lime, yellow, orange, red, violet);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    #qr-left, #qr-right {
+    .qr-container {
       position: absolute;
       bottom: 20px;
       width: 90px;
-      height: 90px;
+      text-align: center;
+      font-size: 0.9em;
       z-index: 10;
+      background: linear-gradient(to right, violet, blue, cyan, lime, yellow, orange, red, violet);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    #qr-left {
+    #donate-container {
       left: 20px;
     }
 
-    #qr-right {
+    #enlist-container {
       right: 20px;
+    }
+
+    .qr-container img {
+      width: 90px;
+      height: 90px;
+      display: block;
+      margin: 0 auto;
     }
   </style>
 </head>
 <body>
-  <div id="title">astralpirates.com</div>
-  <div id="subtitle">grrrreat things are to come verrry soon</div>
-  <img src="donate.png" id="qr-left" alt="Donate QR">
-  <img src="enlist.png" id="qr-right" alt="Enlist QR">
+  <div id="title">
+    <img src="logo.png" alt="Logo">
+    astralpirates.com
+  </div>
+  <div id="subtitle">let's embark and save the world together</div>
 
-  <!-- Three.js r149 for compatibility with script includes -->
+  <!-- QR Code: Donate -->
+  <div class="qr-container" id="donate-container">
+    <img src="donate.png" alt="Donate QR">
+    <div>Donate</div>
+  </div>
+
+  <!-- QR Code: Enlist -->
+  <div class="qr-container" id="enlist-container">
+    <img src="enlist.png" alt="Enlist QR">
+    <div>Enlist</div>
+  </div>
+
+  <!-- Three.js (r149 for legacy compatibility) -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
 
   <script>
     const scene = new THREE.Scene();
 
-    // Galaxy cube background (Milky Way texture set)
     const loader = new THREE.CubeTextureLoader();
     loader.setPath('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/MilkyWay/');
     scene.background = loader.load([
@@ -81,11 +120,11 @@
     light.position.set(10, 10, 10);
     scene.add(light);
 
-    // Gradient material for tetrahedron
+    // Tetrahedron gradient shader
     const material = new THREE.ShaderMaterial({
       uniforms: {
-        color1: { value: new THREE.Color(0x5500ff) }, // Violet/blue
-        color2: { value: new THREE.Color(0xff0066) }  // Red/pink
+        color1: { value: new THREE.Color(0x5500ff) },
+        color2: { value: new THREE.Color(0xff0066) }
       },
       vertexShader: `
         varying vec3 vPosition;
