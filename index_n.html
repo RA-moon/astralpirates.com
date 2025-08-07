@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>3D Space Warp mit Tetra</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: black; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/MTLLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/OBJLoader.js"></script>
+<script>
+  let camera, scene, renderer;
+  let mouseX = 0, mouseY = 0;
+  let starField;
+  let light;
+  let speed = 0;
+
+  init();
+  animate();
+
+  function init() {
+    // Szene & Kamera
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+    camera.position.z = 5;
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Licht
+    light = new THREE.PointLight(0xffffff, 2, 100);
+    scene.add(light);
+
+    // Regenbogen-Update
+    let hue = 0;
+    setInterval(() => {
+      hue = (hue + 1) % 360;
+      light.color.setHSL(hue / 360, 1, 0.5);
+    }, 30);
+
+    // Mausbewegung
+    document.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    // Sterne erzeugen
+    const starCount = 2000;
+    const starGeometry = new THREE.BufferGeometry();
+    const starPositions = new Float32Array(starCount * 3);
+
+    for (let i = 0; i < starCount * 3; i++) {
+      starPositions[i] = (Math.random() - 0.5) * 2000;
+    }
+
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+
+    const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 1 });
+    starField = new THREE.Points(starGeometry, starMaterial);
+    scene.add(starField);
+
+    // 3D-Modell laden
+    const mtlLoader = new THREE.MTLLoader();
+    mtlLoader.setPath('/mnt/data/');
+    mtlLoader.load('tetra.mtl', (materials) => {
+      materials.preload();
+      const objLoader = new THREE.OBJLoader();
+      objLoader.setMaterials(materials);
+      objLoader.setPath('/mnt/data/');
+      objLoader.load('tetra.obj', (object) => {
+        object.scale.set(1, 1, 1);
+        object.position.set(0, 0, 0);
+        scene.add(object);
+      });
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    // Lichtposition (Maus)
+    light.position.x = mouseX * 10;
+    light.position.y = mouseY * 10;
+    light.position.z = camera.position.z;
+
+    // Entfernung vom Zentrum
+    const dist = Math.min(Math.sqrt(mouseX ** 2 + mouseY ** 2), 1);
+
+    // Geschwindigkeit abhängig von Mausposition
+    const maxSpeed = 1;
+    speed = maxSpeed * (1 - dist);
+
+    // Blickrichtung berechnen
+    const offsetX = mouseX * dist * 2;
+    const offsetY = mouseY * dist * 1; // Weniger Rotation bei Y (Z-Achse abflachen)
+    const target = new THREE.Vector3(offsetX, offsetY, -10).add(camera.position);
+    camera.lookAt(target);
+
+    // Bewegung nach vorne
+    const direction = new THREE.Vector3();
+    camera.getWorldDirection(direction);
+    direction.multiplyScalar(speed);
+    camera.position.add(direction);
+
+    // Warp-Speed-Effekt: Sterne skalieren leicht
+    const positions = starField.geometry.attributes.position.array;
+    for (let i = 0; i < positions.length; i += 3) {
+      positions[i + 2] += speed * 10;
+      if (positions[i + 2] > camera.position.z) {
+        positions[i + 2] = camera.position.z - 2000 + Math.random() * -100;
+      }
+    }
+    starField.geometry.attributes.position.needsUpdate = true;
+
+    renderer.render(scene, camera);
+  }
+</script>
+</body>
+</html>
